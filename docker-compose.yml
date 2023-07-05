@@ -1,0 +1,53 @@
+services:
+  backend:
+    image: nestjs-api-prod:2.0.0
+    container_name: nestjs_api_prod
+    user: 1000:1000
+    build:
+      context: ./backend
+      target: development
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    command: yarn run start:debug
+    volumes:
+     - ./backend:/app
+    depends_on:
+      - postgres
+    networks:
+      - default
+    environment:
+      - DATABASE_HOST=postgres
+      - NODE_ENV=development
+  frontend: 
+    image: react-frontend:1.0.0
+    container_name: react-frontend
+    user: 1000:1000
+    build:
+      context: ./frontend
+      target: development
+    expose:
+      - 3000
+    ports:
+      - "3001:3000"
+    command: yarn start
+    volumes:
+     - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - default
+    environment:
+      - CREATE_REACT_APP_API_URL=http://localhost:3000/
+  postgres:
+    image: postgres
+    shm_size: 128MB
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - 5432:5432
+    networks:
+      - default
+
