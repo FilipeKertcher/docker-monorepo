@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
+} from 'typeorm';
+import { UserORMEntity } from './User.entity';
 
 @Entity({ name: 'posts' })
 export class PostORMEntity {
@@ -13,4 +21,8 @@ export class PostORMEntity {
 
   @Column()
   image: string;
+
+  @ManyToOne(() => UserORMEntity, (user: UserORMEntity) => user.id)
+  @JoinColumn({ name: 'user_id' })
+  user: Relation<UserORMEntity>;
 }

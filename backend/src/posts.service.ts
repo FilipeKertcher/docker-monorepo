@@ -21,7 +21,32 @@ export class PostsService {
 
   private API_BASE_URL = this.configService.get('SOURCE_HOST');
 
-  async fetchPosts() {
+  private async loadPostsInDatabase(posts: Post[], users: User[]) {
+    const mappedUsers = users.map(
+      (user) =>
+        ({
+          name: user.name,
+          apiId: user.id,
+          username: user.username,
+          email: user.email,
+        } as Partial<UserORMEntity>),
+    );
+
+    const createdUsers = await this.usersRepository.save(mappedUsers);
+
+    const mappedPosts = posts.map((post) => {
+      const user = createdUsers.find((user) => user.apiId === post.userId);
+
+      return {
+        ...post,
+        user,
+      } as Partial<PostORMEntity>;
+    });
+
+    await this.postsRepository.save(mappedPosts);
+  }
+
+  private async fetchPostsFromAPI() {
     const { data: posts } = await this.httpService.axiosRef.get<Post[]>(
       `${this.API_BASE_URL}/test-posts`,
     );
@@ -30,6 +55,7 @@ export class PostsService {
       `${this.API_BASE_URL}/test-users`,
     );
 
+    this.loadPostsInDatabase(posts, users);
     const mappedPosts = posts.map((post) => {
       const user = users.find((user) => user.id === post.userId);
       return {
@@ -38,6 +64,35 @@ export class PostsService {
       };
     });
 
-    return mappedPosts;
+    return mappedPosts as Post[];
+  }
+
+  private async fetchFromDatabase() {
+    const posts = await this.postsRepository.find({
+      relations: {
+        user: true,
+      },
+    });
+
+    const mapped = posts.map((post) => ({
+      userId: post.user.id,
+      id: post.id,
+      title: post.title,
+      body: post.body,
+      image: post.image,
+      authorName: post.user.name,
+    }));
+
+    return mapped as Post[];
+  }
+
+  async fetchPosts() {
+    const databasePosts = await this.fetchFromDatabase();
+
+    if (databasePosts.length > 0) return databasePosts;
+
+    const apiPosts = await this.fetchPostsFromAPI();
+
+    return apiPosts;
   }
 }
