@@ -95,4 +95,14 @@ export class PostsService {
 
     return apiPosts;
   }
+
+  async test() {
+    const cu = await this.postsRepository.find({
+      relations: {
+        user: true,
+      },
+    });
+
+    return cu;
+  }
 }

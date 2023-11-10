@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PostsController } from './posts.controller';
-import { PostsService } from './posts.service';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostORMEntity, UserORMEntity } from 'entities';
 import ormConfig from 'ormconfig';
 import { ConfigService } from '@nestjs/config';
+import { PostsModule } from './modules/posts/posts.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 @Module({
   imports: [
@@ -15,9 +13,15 @@ import { ConfigService } from '@nestjs/config';
     TypeOrmModule.forRoot({
       ...ormConfig,
     }),
-    TypeOrmModule.forFeature([PostORMEntity, UserORMEntity]),
+    PostsModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true,
+      sortSchema: true,
+      playground: true,
+    }),
   ],
-  controllers: [AppController, PostsController],
-  providers: [AppService, PostsService, ConfigService],
+  controllers: [],
+  providers: [ConfigService],
 })
 export class AppModule {}
