@@ -17,6 +17,7 @@ const ormConfig = {
   password: process.env.DATABASE_PASSWORD,
   database: 'postgres',
   entities: [join(__dirname, '**', '*.entity.{ts,js}')],
+  seeds: [join(__dirname, '/seeds/*{.ts,.js}')],
   migrations: [join(__dirname, '/migrations/*{.ts,.js}')],
   autoLoadEntities: true,
   cli: {
